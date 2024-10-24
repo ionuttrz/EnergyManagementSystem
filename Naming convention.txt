@@ -1,0 +1,5 @@
+EMS = Energy Management System
+
+BE = Backend
+
+FE = Frontend
