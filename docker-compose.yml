@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  mysql1:
+    image: mysql
+    container_name: mysql1
+    environment:
+      MYSQL_DATABASE: 'energymanagementdevices'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - "3307:3306"
+    volumes:
+      - my-db1:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql2:
+    image: mysql
+    container_name: mysql2
+    environment:
+      MYSQL_DATABASE: 'energymanagementusers'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - "3308:3306"
+    volumes:
+      - my-db2:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql3:
+    image: mysql
+    container_name: mysql3
+    environment:
+      MYSQL_DATABASE: 'energymanagementmonitoring'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - "3309:3306"
+    volumes:
+      - my-db3:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq1:
+    image: rabbitmq:3.12.9-management
+    container_name: rabbitmq1
+    environment:
+      RABBITMQ_DEFAULT_HOST: localhost
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      
+
+  users:
+    image: user-image
+    container_name: users-container
+    depends_on:
+      - mysql2
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql2:3306/energymanagementusers
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - "8090:8080"
+    
+
+  devices:
+    image: device-image
+    container_name: devices-container
+    depends_on:
+      - mysql1
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql1:3306/energymanagementdevices
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - "8091:8081"
+
+  monitoring:
+    image: monitoring-image
+    container_name: monitoring-container
+    depends_on:
+      - mysql3
+      - rabbitmq1
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql3:3306/energymanagementmonitoring
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_RABBITMQ_HOST: rabbitmq1
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    ports:
+      - "8093:8083"
+
+  chat:
+    image: chat-image
+    container_name: chat-container
+    ports:
+      - "8095:8085"
+
+  fe:
+    image: fe-image
+    container_name: fe-service
+    ports: 
+      - "4201:4200"
+    depends_on: 
+      - devices
+      - users
+      - monitoring
+
+
+volumes:
+  my-db1:
+  my-db2:
+  my-db3:
+
+
