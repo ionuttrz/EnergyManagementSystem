@@ -1,0 +1,32 @@
+<div class="devices-container">
+    <div *ngFor="let device of devices" class="device-entry">
+        <p><strong>
+                Device id: {{ device.id }}
+            </strong>
+        </p>
+        <p>
+            <strong>
+                User email: {{ device.userEmail }}
+            </strong>
+        </p>
+        <p>
+            <strong>
+                Description: {{ device.description }}
+            </strong>
+        </p>
+        <p>
+            <strong>
+                Address: {{ device.address }}
+            </strong>
+        </p>
+        <p>
+            <strong>
+                Maximum hourly energy consumption: {{ device.maximumConsumption }} kWh
+            </strong>
+        </p>
+        <div *ngIf="device.id !== undefined">
+            <button (click)="showDeviceChart(device.id)">Show chart</button>
+        </div>
+    </div>
+</div>
+
